@@ -1,8 +1,6 @@
 
 class manageFiware{
-	// static baseUrl = "http://10.3.63.46:1026/";
-// static localFiwareIp = "10.3.63.46:1026/";
-// static proxyUrl = "http://smartregion.sokigo.com/fiwareproxy/";
+
 static get proxyLocalUrl(){
 	return "http://smartregion.sokigo.com/fiwareproxy/local/"
 } 
@@ -69,16 +67,13 @@ static createXhr() {
 	return manageFiware.createCORSRequest();
 	
 }
-	// static entities = [];
-	// static subscriptions = [];
-	// static types = [];
-	//var baseUrl = "http://krjo16lse.cartesia.se:1026/fiware/";
+
 
 	static updateEntities(){
 		return new Promise((resolve,reject) =>{
 			var request = new XMLHttpRequest();
 
-			//request.open('GET', 'http://smartregion.sokigo.com/fiwareproxy/local/'+'v2/entities/?options=keyValues');
+			
             request.open('GET', 'http://localhost:8050/publicEntities');
             request.withCredentials = true;
 

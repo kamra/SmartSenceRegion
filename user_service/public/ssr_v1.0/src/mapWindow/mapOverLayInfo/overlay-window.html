@@ -1,0 +1,212 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="overlay-window">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            /* CSS rules for your element */
+            .overlay {
+                /*position: relative;*/
+                border: 1px solid grey;
+                background-color: #f4f7f7;
+                /*height: 150px;*/
+                width: 250px;
+                border-radius: 5px;
+                overflow: auto;
+                -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+                filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+            }
+
+                .overlay:after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 50%;
+                    width: 0;
+                    height: 0;
+                    border: 49px solid transparent;
+                    border-top-color: #00aabb;
+                    border-bottom: 0;
+                    border-left: 0;
+                    margin-left: -24.5px;
+                    margin-bottom: -49px;
+                    z-index: 1000;
+                }
+
+
+               
+
+            paper-item {
+                --paper-item-min-height: 10px;
+                height: 15px;
+                margin-bottom: 10px;
+                font-size: 15px;
+            }
+
+            .headLine {
+                margin-top: 5px;
+                font-size: 15px;
+            }
+
+            .header {
+                margin-top: 0px;
+                padding-left: 4px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+
+            paper-icon-item {
+                height: 15px;
+                padding: 4px;
+            }
+
+            div.inner {
+                text-wrap: normal;
+                height: 20px;
+            }
+
+            div.main {
+                font-size: 10px;
+            }
+
+            div.subtitle {
+                font-size: 13px;
+            }
+
+            paper-icon-item {
+                --paper-item-icon-width: 30px;
+            }
+
+            iron-icon {
+                --iron-icon-width: 17px;
+                --iron-icon-height: 17px;
+            }
+
+            paper-item-body {
+                --paper-item-body-two-line-min-height: 40px;
+            }
+
+            .attrIcon {
+                padding-left: 4px;
+            }
+
+            .attrHead {
+                font-weight: bold;
+            }
+
+            .breakLine {
+                width: 80%;
+                color: lightgrey;
+            }
+
+            ul {
+                margin-top: 0px;
+            }
+
+            .capitalize {
+                text-transform: capitalize;
+                font-weight: bold;
+            }
+        </style>
+
+
+        <div id="overlay" class="overlay layout vertical">
+   
+
+
+                <div class="header layout horizontal justified">
+                    <paper-item class="headLine" style="margin-top: 10px;">{{properties.id}}</paper-item>
+
+                    <div>
+                        <paper-icon-button icon="close" on-tap="_closeInfo"></paper-icon-button>
+
+                    </div>
+
+                </div>
+
+                <div class="content layout vertical">
+                    <paper-icon-item>
+                        <iron-icon icon="update" slot="item-icon"></iron-icon>
+                        <paper-item-body two-line>
+                            <div class="main inner">Last updated</div>
+                            <div class="subtitle inner">{{date}}</div>
+                        </paper-item-body>
+                    </paper-icon-item>
+                    <hr class="breakLine">
+                    <div class="layout horizontal">
+                        <iron-icon class="attrIcon" icon="list"></iron-icon>
+                        <paper-item class="attrHead">Attributes:</paper-item>
+                    </div>
+
+                    <ul>
+                        <template is="dom-repeat" items="[[properties.attris]]">
+                            <li>
+                                <div class="layout horizontal">
+                                    <paper-item class="capitalize">[[item.attri.name]]</paper-item><paper-item>{{item.attri.value.value}}</paper-item>
+                                </div>
+
+                            </li>
+                        </template>
+                    </ul>
+
+
+
+                </div>
+           
+        </div>
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class OverlayWindow extends Polymer.Element {
+
+            static get is() { return 'overlay-window'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    properties: {
+                        type: Object,
+                        value: null
+                    },
+                    date: {
+                        type: String,
+                        computed: '_getDate()'
+                    }
+                }
+
+
+            }
+            // Just for debugging!
+            _closeInfo() {
+     
+                this.dispatchEvent(new CustomEvent('close', { detail: this.properties.id }))
+            }
+            _getDate() {
+
+                if (this.properties === null) {
+                    return "";
+                }
+
+                return new Date(this.properties.dateModified).toUTCString();
+
+            }
+
+
+
+
+
+        }
+
+        // Register the x-custom element with the browser
+        customElements.define('overlay-window', OverlayWindow);
+    </script>
+
+</dom-module>

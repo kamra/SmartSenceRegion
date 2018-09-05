@@ -1,0 +1,115 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../../bower_components/iron-icons/maps-icons.html">
+
+
+<link rel="import" href="layer-control.html">
+<link rel="import" href="map-filter.html">
+
+<dom-module id="tool-bar">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            #toolbar {
+                position: absolute;
+                top: 10%;
+                left: 25%;
+                height: 50px;
+                width: 250px;
+                background-color: white;
+                border: 1px solid #3eb1c8;
+                border-radius: 5px;
+                box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+            }
+
+            paper-icon-button {
+                color: grey;
+            }
+
+            layer-control {
+                height: 200px;
+                padding: 3px;
+                width: 200px;
+                background-color: white;
+                border: 2px solid grey;
+                border-radius: 5px;
+                top: 15%;
+                position: absolute;
+                overflow: auto;
+            }
+       
+            .vl {
+                border-left: 2px solid grey;
+                height: 70%;
+            }
+        </style>
+
+        <div id="toolbar" class="layout horizontal center">
+
+            <paper-icon-button icon="maps:layers" on-tap="toggleLayerControl"></paper-icon-button>
+           
+            <div class="vl"></div>
+            <map-filter  map="{{map}}" attris="{{attributesAvailable}}"></map-filter>
+
+
+           
+
+        </div>
+
+        <layer-control hidden$="{{!layerControl}}" map="{{map}}"></layer-control>
+        
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class Toolbar extends Polymer.Element {
+
+            static get is() { return 'tool-bar'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+
+                    map: {
+                        type: Object,
+                        value: null
+                    },
+                    layerControl: {
+                        type: Boolean,
+                        value: false
+                    },
+                    mapFilter: {
+                        type: Boolean,
+                        value: false
+                    },
+                    attributesAvailable: {
+                        type: Array,
+                        value: []
+                    }
+
+                }
+            }
+            toggleLayerControl() {
+                this.layerControl === false ? this.layerControl = true : this.layerControl = false;
+
+            }
+
+            
+        }
+
+
+
+        // Register the x-custom element with the browser
+        customElements.define('tool-bar', Toolbar);
+    </script>
+
+</dom-module>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<wfs:Transaction service="WFS" version="1.1.0"
+  xmlns:tows="http://www.tinyows.org/"
+  xmlns:wfs="http://www.opengis.net/wfs"
+  xmlns:ogc="http://www.opengis.net/ogc"
+  xmlns:gml="http://www.opengis.net/gml">
+  <wfs:Delete typeName="tows:***eview">
+    <ogc:Filter>
+      <ogc:FeatureId fid="****view.***"/>
+    </ogc:Filter>
+  </wfs:Delete>
+</wfs:Transaction>

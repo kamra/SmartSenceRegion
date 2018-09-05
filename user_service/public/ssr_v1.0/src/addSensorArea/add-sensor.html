@@ -1,0 +1,526 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="attribute-content.html">
+<link rel="import" href="sensor-request-dialog.html">
+<link rel="import" href="custom-notification.html">
+<link rel="import" href="save-dialog.html">
+
+
+<dom-module id="add-sensor">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+
+            .main {
+                background-color: lightgrey;
+                height: 100%;
+                width: 100%;
+                flex-direction: column-reverse;
+            }
+
+            .docContainer {
+                background-color: white;
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                width: 50%;
+                box-shadow: 10px;
+                margin: auto;
+                overflow: auto;
+            }
+
+            .locationContainer {
+                height: 400px;
+                width: 400px;
+            }
+
+            .map {
+                height: 90%;
+                margin-top: 0px;
+                padding: 0px;
+            }
+
+            .docContent {
+                padding: 10px;
+                margin-bottom: 50px;
+            }
+
+            .hide[hidden] {
+                display: none;
+            }
+
+            hr {
+                width: 100%;
+            }
+
+            #saveSensorButton {
+                position: absolute;
+                left: 75%;
+                bottom: 10%;
+                background-color: lightblue;
+                border-radius: 50%;
+                box-shadow: 1px 2px #ccc;
+            }
+
+            paper-dialog {
+                width: 200px;
+                height: 300px;
+            }
+
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+
+            #errorOnSave {
+                color: red;
+                width: 70%;
+            }
+
+            .fat {
+                font-weight: bold;
+            }
+
+            .responseButton {
+                background-color: lightgray;
+            }
+        </style>
+
+        <div class="container vertical center-justified flex layout main">
+
+
+
+            <div class="docContainer layout flex">
+
+                <div class="docContent container layout flex vertical">
+                    <paper-input id="entityName" char-counter allowed-pattern="[a-zA-Z0-9_]" error-message="Minumum length is 5 charachters" minlength=5 label="Id of object (Only characters a-z, A-Z, 0-9 and _ are allowed)"></paper-input>
+                    <div class="layout horizontal">
+                        <paper-item id="errorOnSave"></paper-item>
+                        <paper-icon-button hidden$="{{!changeView}}" icon="settings-input-antenna" on-tap="_showSensorRequest"></paper-icon-button>
+                    </div>
+
+                    <paper-item class="fat">Attributes</paper-item>
+
+
+                    <div id="attrContainer" class="checkCont container layout vertical">
+
+                        <template is="dom-repeat" items="{{attributes}}">
+                            <attribute-content id="{{item.name}}"
+                                               name="{{item.name}}"
+                                               units="{{item.units}}"
+                                               type="{{item.type}}"
+                                               location="{{environment}}"
+                                               visibility="{{visibility}}"
+                                               on-attributechecked="_attributeChecked"></attribute-content>
+                            <hr>
+
+                        </template>
+
+                    </div>
+
+
+                    <paper-item class="fat">Environment</paper-item>
+
+                    <paper-radio-group selected="0" id="environment">
+                        <paper-radio-button name="0">Indoor</paper-radio-button>
+                        <paper-radio-button name="1">Outdoor</paper-radio-button>
+
+                    </paper-radio-group>
+
+                    <hr>
+                    <paper-item class="fat">Visibility</paper-item>
+
+
+                    <paper-radio-group selected="0" id="visibility">
+                        <paper-radio-button name="0">Public</paper-radio-button>
+                        <paper-radio-button name="1">Private</paper-radio-button>
+
+                    </paper-radio-group>
+                    <hr>
+                    <paper-item class="fat">Actuator Entity</paper-item> <paper-checkbox checked={{toggle}}>This device will be an acutator</paper-checkbox>
+                    <iron-collapse opened="{{toggle}}" class="content">
+                        <paper-input id="provAppInput" type="url" label="Url that the actuator calls will be made to" error-message="Can not be empty if selected and must be an url" required></paper-input>                       
+                    </iron-collapse>
+                    <hr>
+                    <div>
+                        <paper-item class="fat">Location</paper-item>
+                        <div class="layout horizontal">
+                            <paper-button style="background-color: lightblue;" id="locationButton" on-tap="_setLocation">Set Location</paper-button>
+                            <paper-item id="locationCoords"></paper-item>
+
+                        </div>
+
+
+                        <paper-dialog id="setLocation" class="locationContainer">
+                            <div class="dlgHeader">
+                                <paper-item>Click the map to set location</paper-item>
+                            </div>
+
+                            <div id="map" class="map"></div>
+                        </paper-dialog>
+                    </div>
+                    <hr>
+                    <div>
+
+
+                        <custom-notification id="customNotification"></custom-notification>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <paper-dialog id="saveResponseDialog" class="layout vertical justified">
+            <div class="dlgHeader layout horizontal center">
+                <h3 class="flex">Response</h3>
+                <iron-icon icon="icons:done"></iron-icon>
+            </div>
+            <div class="dlgContent">
+                <paper-item id="responseText"></paper-item>
+            </div>
+
+            <div class="layout horizontal center-justified">
+                <paper-button class="responseButton" on-tap="closeResponseDialog">Ok</paper-button>
+            </div>
+
+        </paper-dialog>
+
+        <save-dialog id="saveSensorDialog" on-save="saveNewSensor" header="Save sensor"></save-dialog>
+        <save-dialog id="changeSensorDialog" on-save="changeSensor" header="Change sensor"></save-dialog>
+
+        <sensor-request-dialog id="sensorRequestDialog"></sensor-request-dialog>
+        <iron-ajax id="ajax"
+                   url="./entity/attributes"
+                   handle-as="json"
+                   on-response="attributeResponse"></iron-ajax>
+
+        <iron-ajax id="saveSensorKeyRock"
+                   
+                   method="post"
+                   url="./entity/keyrockadd"
+                   <!--handle-as="json"-->
+                   content-type="application/json"
+                   on-response="addSensorTest"></iron-ajax>
+        <iron-ajax id="saveSensorReq"
+                   body="[[payload]]"
+                   method="post"
+                   url="./entity/addentity"
+                   handle-as="json"
+                   content-type="application/json"
+                   on-response="addSensorResponse"></iron-ajax>
+        <iron-ajax id="changeSensorReq"
+                   body="[[payload]]"
+                   method="post"
+                   url="./entity/changesensor"
+                   handle-as="json"
+                   content-type="application/json"
+                   on-response="changeSensorResponse"></iron-ajax>
+        <paper-icon-button id="saveSensorButton" icon="save" on-tap="_saveSensor">Save</paper-icon-button>
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class AddSensorArea extends Polymer.Element {
+
+            static get is() { return 'add-sensor'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    socket: {
+                        type: Object,
+                        value: null
+                    },
+                    attributes: {
+                        type: Array,
+                        value: []
+                    },
+
+                    environment: {
+                        type: Array,
+                        value: ['Indoor', 'Outdoor']
+                    },
+                    visibility: {
+                        type: Array,
+                        value: ['Public', 'Private']
+                    },
+                    map: {
+                        type: Object,
+                        value: null
+                    },
+                    location: {
+                        type: Array,
+                        value: []
+                    },
+                    ajaxBody: function () {
+                        return payload;
+                    },
+                    change: {
+                        type: Boolean,
+                        value: false
+                    },
+                    changeView: {
+                        type: Boolean,
+                        value: true
+                    },
+                    toggle: {
+                        type: Boolean,
+                        value: false
+                    }
+
+                }
+            }
+            connectedCallback() {
+                Polymer.Async.microTask.run(() => {
+                    this.getAttributes();
+                });
+            }
+            closResponseDialog(ev) {
+                this.$.saveResponseDialog.close();
+                // Clear add sensor document here if the request was 200.
+            }
+            getAttributes() {
+
+                this.$.ajax.generateRequest()
+            }
+            attributeResponse(ev) {
+                
+                this.attributes = ev.detail.response
+             
+
+            }
+        
+            addSensorTest(e) {
+                console.log(e)
+            }
+
+            _saveSensor() {
+
+                // Save validations here
+                if (!this.$.entityName.validate()) {
+                    return;
+                }
+
+
+                // Atleast one attribute nees to be selected
+                let elems = this.$.attrContainer.children
+
+                let typeAtt = [];
+                let attris = [];
+                for (let i = 0; i < elems.length; i++) {
+                    if (elems[i].id) {
+                        if (elems[i].toggle) {
+
+                            attris.push(elems[i].getData())
+                           typeAtt.push(elems[i].id)
+                        }
+                    }
+                }
+
+                
+
+                if (typeAtt.length > 1) {
+                    typeAtt = 'Mix'
+                } else {
+                    typeAtt = typeAtt[0]
+                }
+
+                // No attribute is selected
+                if (attris.length === 0) {
+                    this.$.errorOnSave.textContent = "Atleast one attribute needs to be selected"
+                    return;
+                }
+
+
+                if (this.location.length === 0) {
+                    this.location[0] = 0;
+                    this.location[1] = 0;
+                }
+
+                
+                attris.push({
+                    name: "position",
+                    type: "geo:point",
+                    value: this.location[0] + "," + this.location[1]
+                })
+                attris.push({
+                    name: "owner",
+                    type: "String",
+                    value: ""
+                })
+                attris.push({
+                    name: "environment",
+                    type: "String",
+                    value: this.environment[this.$.environment.selected]
+                })
+                attris.push({
+                    name: "visibility",
+                    type: "String",
+                    value: this.visibility[this.$.visibility.selected]
+                })
+                let url;
+                if (this.toggle && this.$.provAppInput.validate()) {
+                    url = this.$.provAppInput.value;
+                }
+
+                
+                
+                let payload = {
+                    provApp: url,    
+                    contextElements: [
+                        {
+                            id: this.$.entityName.value,
+                            isPattern: "false",
+                            type: typeAtt,
+                            attributes: attris
+                        }
+                    ],
+                    updateAction: this.change === true  ? "REPLACE" : "APPEND"
+
+                }
+
+                if (this.$.customNotification.toggle === true) {
+                    if (!this.$.customNotification.save(this.$.entityName.value, typeAtt)) {
+                        this.$.errorOnSave.textContent = "Custom notification invalid"
+                        return;
+                    }
+                }
+               
+
+                this.payload = payload;
+                console.log(payload)
+
+                if (this.change) {
+                    this.$.saveSensorDialog.open();
+                    
+                } else {
+                    this.$.changeSensorDialog.open();
+                   
+                }
+
+            }
+            saveNewSensor() {
+                
+                this.$.changeSensorReq.generateRequest();
+            }
+            changeSensor() {
+                
+                this.$.saveSensorReq.generateRequest();
+            }
+
+            addSensorResponse(ev) {
+
+                let response = ev.detail.response;
+                 
+                this.$.responseText.textContent = response.contextResponses[0].statusCode.reasonPhrase
+              
+                this.$.saveResponseDialog.open();
+                
+            }
+            _attributeChecked(e) {
+                
+                this.$.customNotification.updateDropdown(e);
+            }
+            _setLocation() {
+
+                this.$.setLocation.open();
+
+                if (this.map) {
+                    return
+                }
+
+                // Try and fix this... No idea why it is not working properly
+                setTimeout(function () {
+                    let map = new ol.Map({
+                        target: this.$.map,
+                        controls: [],
+                        layers: [
+                            new ol.layer.Tile({
+                                source: new ol.source.OSM()
+                            })
+                        ],
+                        view: new ol.View({
+                            center: new ol.proj.fromLonLat([18.67, 64.59]),
+                            zoom: 12
+                        })
+                    });
+
+                    this.map = map;
+
+                    this.map.on('click', (e) => {
+
+                        
+                        this.location = new ol.proj.transform(e.coordinate, 'EPSG:3857', 'EPSG:4326');
+
+                        this.$.locationCoords.textContent = 'Long: ' + this.location[0].toString().substring(0, 5) + ' : Lat: ' + this.location[1].toString().substring(0, 5)
+                        this._closeMap();
+                    })
+
+
+                }.bind(this), 100);
+
+            }
+            _closeMap() {
+                this.$.setLocation.close();
+            }
+            preFilledData(data) {
+                this.$.sensorRequestDialog.data = data;
+                this.change = true;
+                this.$.entityName.value = data.id
+                this.$.environment.selected = this.environment.indexOf(data.environment.value);
+                this.$.visibility.selected = this.visibility.indexOf(data.visibility.value);
+                let tempLoc = data.position.value.split(',');
+                this.location = tempLoc;
+                
+                this.$.locationCoords.textContent = 'Long: ' + tempLoc[0].toString().substring(0, 5) + ' : Lat: ' + tempLoc[1].toString().substring(0, 5)
+
+                let elems = this.$.attrContainer.children
+                let attris = [];
+                let arr = Object.keys(data)
+                for (let i = 0; i < elems.length; i++) {
+                    elems[i].toggle = false;
+                    if (elems[i].id) {
+                       
+                    }
+                    for (let j = 0; j < arr.length; j++) {
+                        if (elems[i].id.toLowerCase() === arr[j]) {
+                            this.$.customNotification.attributesInNot.push(elems[i].id);
+                            
+                            elems[i].preFilledData(data[arr[j]], arr[j])
+                        }
+                    }
+                    
+                }
+
+            }
+            _showSensorRequest() {
+                this.$.sensorRequestDialog.open();
+            }
+            changeSensorResponse(ev) {
+                console.log(ev)
+            }
+            closeResponseDialog() {
+                this.$.saveResponseDialog.close();
+            }           
+        }
+        // Register the x-custom element with the browser
+        customElements.define('add-sensor', AddSensorArea);
+    </script>
+
+</dom-module>

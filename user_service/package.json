@@ -1,0 +1,32 @@
+{
+  "name": "sense_smart_region",
+  "version": "1.0.0",
+  "description": "Simple platform/application to handle entites connected to a fiware orion broker.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "nodemon app.js",
+    "start": "node app.js"
+  },
+  "author": "Andreas Hedin",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.18.2",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "express-unless": "^0.5.0",
+    "mongodb": "^3.0.2",
+    "mongojs": "^2.4.1",
+    "mongoose": "^5.0.6",
+    "nodemailer": "^4.6.4",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "socket.io": "^2.0.4",
+    "xml2js": "^0.4.19"
+  },
+  "devDependencies": {
+    "nodemon": "^1.14.11"
+  }
+}

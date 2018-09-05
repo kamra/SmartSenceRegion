@@ -1,0 +1,182 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="overlay-window.html">
+
+<dom-module id="map-overlay-info">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style>
+            /* CSS rules for your element */
+            .popup{
+                height: 300px;
+                width: 200px;
+            }
+            #mapOverlay {
+                border: 2px solid black;
+            }
+        
+
+        </style>
+
+        <!-- shadow DOM for your element -->
+
+        <overlay-window hidden id="overLay"></overlay-window>
+
+        <iron-ajax
+                   id="getSensorInfo"
+                   params="{{sensorId}}"
+                   handle-as="json"
+                   content-type="application/json"
+                   method="get"
+                   on-response="_showInfoWindow"
+                   url="./entity/entity"></iron-ajax>
+
+    </template>
+
+    <script>
+     
+        class MapOverLayInfo extends Polymer.Element {
+
+            static get is() { return 'map-overlay-info'; }
+
+      
+            static get properties() {
+                return {
+                    
+                    values: {
+                        type: Array,
+                        value: []
+                    },
+                    map: {
+                        type: Object,
+                        value: null
+                    },
+                    sensorId: {
+                        type: Object,
+                        value: null
+                    },
+                    attributesAv: {
+                        type: Array,
+                        value: []
+                    }
+                }
+            }
+           
+           
+            connectedCallback() {
+                Polymer.Async.microTask.run(() => {
+
+                    let select = new ol.interaction.Select({
+                       
+                    });
+
+                    this.map.addInteraction(select);
+                    select.on('select', (e) => {
+
+                        var originalFeatures = e.selected[0].get('features')
+
+                        if (originalFeatures.length === 1) {
+
+                            this.clickedCoordinate = e.coordinate;
+
+                            this.sensorId = {sensor:  originalFeatures[0].I.id };
+                            this.$.getSensorInfo.generateRequest();
+                        } else {
+                            var extent = new ol.extent.createEmpty();
+                            originalFeatures.forEach(function (f, index, array) {
+                                ol.extent.extend(extent, f.getGeometry().getExtent());
+                            });
+                            
+                            this.map.getView().fit(extent, { size: this.map.getSize(), duration: 500 });
+                            
+                        }
+
+                        select.getFeatures().clear();
+                        
+
+                    })
+
+
+
+                });
+            }
+            
+            _showInfoWindow(ev) {
+               
+                this.values = this._toArray(ev.detail.response);
+     
+                let ov = document.createElement('overlay-window')
+
+                let obj = {};
+                let attris = [];
+                for (let i = 0; i < this.values.length; i++) {
+                    for (let j = 0; j < this.attributesAv.length; j++) {
+
+                        if (this.values[i].name === this.attributesAv[j]) {
+                            attris.push({
+                                'attri': {
+                                    name: this.values[i].name,
+                                    value: this.values[i].value
+                                }
+                            }) 
+                        }
+                    }
+                }
+                
+                obj.attris = attris;
+                obj.id = ev.detail.response.id;
+                obj.dateModified = ev.detail.response.dateModified === undefined ? null : ev.detail.response.dateModified.value;
+        
+
+                ov.properties = obj;
+
+                let coord = new ol.geom.Point(ol.proj.fromLonLat(
+                    [parseFloat(ev.detail.response.position.value.split(',').slice(0, 1)), parseFloat(ev.detail.response.position.value.split(',').slice(1, 2))]))
+
+                ov.hidden = false;
+
+                let yOffset = -(225 + (23 * obj.attris.length));
+              
+
+                let popup = new ol.Overlay({
+                    element: ov,
+                    position: coord.B,
+                   
+                    offset: [-110, yOffset],
+                 
+                })
+
+
+                ov.addEventListener('close', () => {
+                    popup.setPosition(undefined)
+                })
+                
+                this.map.addOverlay(popup)
+               
+
+            }
+            _toArray(obj) {
+                
+                return Object.keys(obj).map(function (key) {
+                    if (key != "selected") {
+                        return {
+                            name: key,
+                            value: obj[key]
+                        };
+                    }
+                });
+            }
+            
+
+
+        }
+
+        // Register the x-custom element with the browser
+        customElements.define('map-overlay-info', MapOverLayInfo);
+    </script>
+
+</dom-module>

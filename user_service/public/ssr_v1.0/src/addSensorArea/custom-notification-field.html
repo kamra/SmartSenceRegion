@@ -1,0 +1,169 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+
+
+<dom-module id="custom-notification-field">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            .operators {
+                width: 500px;
+                margin-bottom: 50px;
+            }
+            .attributes {
+                width: 200px;
+            }
+            paper-dropdown-menu{
+
+            }
+        </style>
+        
+
+
+
+        <div class="layout horizontal">
+            <paper-dropdown-menu id="attribute" vertical-align="bottom" no-animations>
+                <paper-listbox class="attributes" slot="dropdown-content">
+                    <template is="dom-repeat" items="{{attris}}">
+                        <paper-item id="[[item]]">[[item]]</paper-item>
+                    </template>
+                </paper-listbox>
+            </paper-dropdown-menu>
+
+
+            <paper-dropdown-menu id="op" vertical-align="bottom" no-animations on-selected-item-changed="checkSelection">
+                <paper-listbox class="operators" slot="dropdown-content">
+                    <template is="dom-repeat" items="{{operators}}">
+                        <paper-item id="[[item]]">[[item]]</paper-item>
+                    </template>
+
+                </paper-listbox>
+            </paper-dropdown-menu>
+
+            <paper-input id="value" required auto-validate disabled$="{{allChanges}}" allowed-pattern="[0-9]" error-message="Can't be empty" minlength=1 label="Value(num)"></paper-input>
+            <paper-input id="valueRange" hidden$="{{!rangeSelected}}" disabled$="{{!rangeSelected}}" required auto-validate allowed-pattern="[0-9]" error-message="Can't be empty" minlength=1 label="Value 2(num)"></paper-input>
+            <paper-icon-button icon="remove-circle-outline" on-tap="_remove"></paper-icon-button>
+        </div>
+
+        
+
+       
+
+
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class CustomNotificationField extends Polymer.Element {
+
+            static get is() { return 'custom-notification-field'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+
+                    operators: {
+                        type: Array,
+                        value: ["==", ">", "<", ">=", "<=", "!=", "..", "All changes"]
+                    },
+                    attris: {
+                        type: Array,
+                        value: []
+                    },
+                    allChanges: {
+                        type: Boolean,
+                        value: false
+                    },
+                    rangeSelected: {
+                        type: Boolean,
+                        value: false
+                    }
+
+
+                }
+                
+            }
+            _remove() {
+                
+                this.dispatchEvent(new CustomEvent('test'))
+            }
+            getRule() {
+
+                this.$.value.validate();
+
+                if (!this.$.value.validate() || this.$.attribute.selectedItem === undefined || this.$.op.selectedItem === undefined && this.allChanges === false
+                    || !this.$.valueRange.validate() && this.rangeSelected === true) {
+                    return false;
+                    
+                } else {
+                    if (this.$.op.selectedItem.id === '..') {
+                        return this.$.attribute.selectedItem.id.toLowerCase() + "==" + this.$.value.value + ".." + this.$.valueRange.value;
+                    } else {
+                        return this.$.op.selectedItem.id === 'All changes' ? true : this.$.attribute.selectedItem.id.toLowerCase() + this.$.op.selectedItem.id + this.$.value.value;
+                    }
+
+                    
+                }
+
+            }
+            getAtt() {
+                return this.$.attribute.selectedItem.id.toLowerCase();
+            }
+            
+            updateAttris(data) {
+
+           
+
+                if (this.attris.includes(data)) {
+                    this.splice('attris', this.attris.indexOf(data), 1)
+                } else {
+                    this.push('attris', data);
+                }
+
+            }
+            checkSelection(ev) {
+                
+                this.$.value.value = "";
+                this.$.valueRange.value = "";
+                this.rangeSelected = false;
+
+                if (ev.detail.value != null) {
+                    console.log(ev.detail.value.id)
+
+                    if (ev.detail.value.id === 'All changes') {
+
+                        this.allChanges = true;
+
+                    } else if (ev.detail.value.id === '..') {
+
+                        this.rangeSelected = true;
+
+
+                    } else {
+                        this.allChanges = false;
+                    }
+                }
+            }
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('custom-notification-field', CustomNotificationField);
+    </script>
+
+</dom-module>

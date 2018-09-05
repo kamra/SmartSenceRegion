@@ -1,0 +1,74 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+
+<dom-module id="socket-connection">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style>
+            /* CSS rules for your element */
+            #map {
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+
+        <!-- shadow DOM for your element -->
+
+       
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class SocketConnection extends Polymer.Element {
+
+            static get is() { return 'socket-connection'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    socket: {
+                        type: Object,
+                        value: null
+                    }
+
+                }
+            }
+
+            connectedCallback() {
+                Polymer.Async.microTask.run(() => {
+                    this._initConnection();
+                });
+            }
+            _initConnection() {
+                
+                this.socket = io('http://localhost:8050');
+                this._listener()
+            }
+            _listener() {
+                this.socket.on('updateSensorValue', (ev) => {
+                   
+                    this.dispatchEvent(new CustomEvent('sensorupdate', { detail: { value: ev } }));
+                    
+                })
+                this.socket.on('login', (ev) => {
+                    console.log('Denna loggade in: ' + ev)
+                    this.dispatchEvent(new CustomEvent('login', {detail: {value: ev}}))
+                })
+
+                this.socket.on('getNewSensorData', (ev) => {
+                 
+                    this.dispatchEvent(new CustomEvent('listrefresh', {bubbles:true, composed:true}))
+                })
+            }
+          
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('socket-connection', SocketConnection);
+    </script>
+
+</dom-module>

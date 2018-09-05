@@ -1,0 +1,217 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+
+
+<dom-module id="sensor-info">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            h3 {
+                margin-top: 0px;
+                margin-bottom: 4px;
+                padding: 8px;
+            }
+
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+
+            .dlgContent {
+                padding: 8px;
+            }
+        </style>
+
+        <paper-dialog id="entityInfo" on-iron-overlay-opened="_showMap" on-iron-overlay-closed="_clearMap">
+            <div class="dlgHeader layout horizontal center">
+                <h3 class="flex">Sensor information</h3>
+                <iron-icon icon="icons:info-outline" on-tap="closeInfo"></iron-icon>
+            </div>
+            <div class="dlgContent">
+                <table>
+                    <template is="dom-repeat" items="{{_toArray(entity)}}">
+                        <tr>
+                            <td>{{item.name}}</td>
+                            <td>{{item.value}}</td>
+                        </tr>
+                    </template>
+                </table>
+                <div hidden$="{{hideMap}}" id="map" style="height:250px;width:100%;padding:4px;"></div>
+            </div>
+        </paper-dialog>
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class SensorInfo extends Polymer.Element {
+
+            static get is() { return 'sensor-info'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    hideMap: {
+                        type: Boolean,
+                        notify: true,
+                        value: true
+                    },
+                    map: {
+                        type: Object,
+                        notify: true,
+                        value: null
+                    },
+                    vectorSource: {
+                        type: Object
+                    },
+                    vectorLayer: {
+                        type: Object
+                    },
+                    view: {
+                        type: Object
+                    },
+                    entities: {
+                        type: Array,
+                        value: []
+                    }
+                 
+
+
+                }
+            }
+            constructor() {
+                // console.log("testing");
+                super();
+                
+                this.vectorSource = new ol.source.Vector({
+                    //create empty vector
+                });
+
+            }
+            showInfo(event) {
+                var dlgElem = this.$.entityInfo;
+                dlgElem.open();
+                let ent = null;
+                ent = this.entities;
+                this.currentList = this.entities;
+                var entity = ent.filter(e => e.id == event.srcElement.id);
+                this.entity = entity[0];
+
+                if (this.map) {
+                    var mapDiv = this.$.map;
+                    mapDiv.innerHTML = "";
+                }
+                var positionMap = false;
+                var pos = [0, 0];
+                for (var prop in this.entity) {
+
+                    if (prop == "position" && this.entity[prop] && this.entity[prop].value.length && this.entity[prop].value.indexOf(',') > 0) {
+                        positionMap = true;
+
+                        pos = this.entity[prop].value.split(",").map(p => parseFloat(p));
+
+                        break;
+                    }
+                }
+                if (positionMap) {
+                    this.view = new ol.View({
+                        center: ol.proj.fromLonLat([0, 0]),
+                        zoom: 1
+                    });
+                    this.hideMap = false;
+                    this.vectorLayer = new ol.layer.Vector({
+                        source: this.vectorSource,
+                        // style: vectorStyle1
+                    });
+
+                    this.vectorLayer.setZIndex(100);
+                    var mapDiv = this.$.map;
+                    this.map = new ol.Map({
+                        target: mapDiv,
+                        layers: [
+                            new ol.layer.Tile({
+                                source: new ol.source.OSM()
+                            }),
+                            this.vectorLayer
+                        ],
+                        view: this.view
+                    });
+                    var entityToMap = this.entitiesToFeature(this.entity);
+                    this.vectorSource.addFeature(entityToMap);
+                    var point = entityToMap.getGeometry();
+                    this.view.setCenter(point.getCoordinates());
+                    this.view.setZoom(16);
+                    this.map.render();
+
+                } else {
+                    this.hideMap = true;
+                }
+
+            }
+
+
+            _showMap() {
+                this.map.updateSize();
+                this.map.render();
+            }
+
+            _clearMap() {
+                this.hideMap = true;
+                this.vectorSource.clear();
+            }
+
+            entitiesToFeature(entity) {
+                var view = new ol.View({
+                    center: ol.proj.fromLonLat([0, 0]),
+                    zoom: 1
+                });
+                if (entity.position) {
+                    var pos = entity.position.value.split(",").map(a => parseFloat(a));
+                    var transformPos = ol.proj.transform(pos, 'EPSG:4326', view.getProjection().getCode());
+                    var f = new ol.Feature({ geometry: new ol.geom.Point(transformPos), })
+                    for (var prop in entity) {
+                        if (prop != "position") {
+                            f.set(prop, entity[prop]);
+                        }
+                    }
+                    return f;
+                }
+            }
+
+            closeInfo() {
+                var dlgElem = this.$.entityInfo;
+                dlgElem.close();
+            }
+            _toArray(obj) {
+                
+                return Object.keys(obj).map(function (key) {
+                    if (key != "selected") {
+
+                        return {
+                            name: key,
+                            // Ok solution
+                            value: obj[key].value === undefined ? obj[key] : obj[key].value
+                        };
+                    }
+                });
+            }
+
+           
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('sensor-info', SensorInfo);
+    </script>
+
+</dom-module>

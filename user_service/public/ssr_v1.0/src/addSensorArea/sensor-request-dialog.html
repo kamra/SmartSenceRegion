@@ -1,0 +1,91 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../../bower_components/paper-radio-group/paper-radio-group.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+
+
+<dom-module id="sensor-request-dialog">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style>
+            h3 {
+                margin-top: 0px;
+                margin-bottom: 4px;
+                padding: 8px;
+            }
+
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+
+            .dlgContent {
+                padding: 8px;
+            }
+
+            paper-dialog#main {
+                max-width: 500px;
+            }
+        </style>
+
+        <paper-dialog id="main">
+            <div class="dlgHeader layout horizontal center">
+                <h3 class="flex">Sensor requests</h3>
+                
+            </div>
+            <div class="dlgContent">
+               <code>{{viewData}}</code>
+            </div>
+        </paper-dialog>
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class SensorRequestDialog extends Polymer.Element {
+
+            static get is() { return 'sensor-request-dialog'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    data: {
+                        type: Object,
+                        value: null
+                    },
+                    viewData: {
+                        type: String,
+                        value: ""
+                    }
+
+
+
+                }
+            }
+            open() {
+               
+                this.$.main.open();
+                this._buildObject();
+            }
+            _buildObject() {      
+                this.viewData = JSON.stringify(this.data)               
+            }
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('sensor-request-dialog', SensorRequestDialog);
+    </script>
+
+</dom-module>

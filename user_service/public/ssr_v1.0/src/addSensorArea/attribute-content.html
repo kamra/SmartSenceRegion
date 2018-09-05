@@ -1,0 +1,177 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../../bower_components/paper-radio-group/paper-radio-group.html">
+
+
+
+<dom-module id="attribute-content">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            .content {
+                margin-left: 20px;
+                margin-bottom: 20px;
+            }
+
+            .checkCont {
+                padding-bottom: 10px;
+            }
+        </style>
+
+        <div id="attrContainer" class="checkCont container layout vertical">
+
+
+            <paper-checkbox id="{{name}}" checked={{toggle}} on-tap="_checkUnitButton">{{name}}</paper-checkbox>
+
+            <iron-collapse opened="{{toggle}}" class="content">
+
+                <paper-item>Unit</paper-item>
+                <div id="Unit" on-tap="_getSelectedUnits">
+                    <paper-radio-group id="unit">
+                        <template is="dom-repeat" items="{{units}}">
+                            <paper-radio-button name="[[item]]">[[item]]</paper-radio-button>
+                        </template>
+
+                    </paper-radio-group>
+
+                </div>
+
+                <hr>
+                <paper-item>Type</paper-item>
+                <div id="Type" >
+                    <paper-radio-group id="type">
+                        <template is="dom-repeat" items="{{type}}">
+                            <paper-radio-button name="[[item]]">[[item]]</paper-radio-button>
+                        </template>
+
+                    </paper-radio-group>
+
+                </div>
+
+            </iron-collapse>
+        </div>
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class AttributeContent extends Polymer.Element {
+
+            static get is() { return 'attribute-content'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+
+                    name: {
+                        type: String,
+                        value: ''
+                    },
+                    units: {
+                        type: Array,
+                        value: []
+                    },
+                    type: {
+                        type: Array,
+                        value: []
+                    },
+                    environment: {
+                        type: Array,
+                        value: []
+                    },
+                    visibility: {
+                        type: Array,
+                        value: []
+                    },
+                    toggle: {
+                        type: Boolean,
+                        value: false
+                    }
+
+
+
+                }
+            }
+
+            getData() {
+
+                return {
+                    "name": this.name.toLowerCase(),
+                    "type": "String",
+                    "value": "",
+                    "metadatas": [
+                        {
+                            "name": "unit",
+                            "type": this.$.unit.selected,
+                            "value": this.$.unit.selected
+                        },
+                        {
+                            "name": "types",
+                            "type": this.$.type.selected,
+                            "value": this.$.type.selected
+                        }
+                    ]
+
+                }
+            }
+
+            _getSelectedTypes() {
+                let elems = this.$.Type.children
+                let types = [];
+                for (let i = 0; i < elems.length; i++) {
+                    if (elems[i].id) {
+                        if (elems[i].checked) {
+
+                            types.push(elems[i].textContent)
+
+                        }
+
+                    }
+                }
+                return types.toString();
+            }
+            _checkUnitButton() {
+                
+                this.dispatchEvent(new CustomEvent('attributechecked', {detail:this.name}))
+
+                this.$.unit.selected = this.units[0];
+                this.$.type.selected = this.type[0];
+
+            }
+            preFilledData(data) {
+
+                let name = this.name;
+                this.$.attrContainer.firstElementChild.checked = true;
+                this.$.unit.selected = data.metadata.unit.value
+                this.$.type.selected = data.metadata.types.value
+
+
+
+            }
+            unCheckMd() {
+                let children = this.$.Type.children
+
+                for (let i = 0; i < children.length; i++) {
+
+                    children[i].checked = false;
+                }
+            }
+
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('attribute-content', AttributeContent);
+    </script>
+
+</dom-module>

@@ -1,0 +1,99 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+
+
+<dom-module id="save-dialog">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+            h3 {
+                margin-top: 0px;
+                margin-bottom: 4px;
+                padding: 8px;
+            }
+
+        </style>
+
+        <paper-dialog id="saveDialog">
+            <div class="dlgHeader layout horizontal center">
+                <h3 class="flex">[[header]]</h3>
+                <iron-icon icon="icons:warning" on-tap="closeInfo"></iron-icon>
+            </div>
+            <div class="dlgContent">
+                <div>
+                    Are you sure you wish to save this into fiware?
+                </div>
+                <div class="layout horizontal">
+                    <paper-button class="flex" on-tap="_cancel">Cancel</paper-button>
+                    <paper-button class="flex end-justified" dialog-dismiss="" on-tap="_save">Save</paper-button>
+                </div>
+            </div>
+        </paper-dialog>
+
+
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class SaveDialog extends Polymer.Element {
+
+            static get is() { return 'save-dialog'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+
+                    header: {
+                        type: String,
+                        value: ""
+                    }
+
+                }
+
+            }
+            open() {
+                this.$.saveDialog.open();
+            }
+            _save() {
+
+                this.dispatchEvent(new CustomEvent('save'))
+                
+            }
+            _cancel() {
+                this.$.saveDialog.close();
+                this.dispatchEvent(new CustomEvent('cancel'))
+
+            }
+        
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('save-dialog', SaveDialog);
+    </script>
+
+</dom-module>
+

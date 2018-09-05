@@ -1,0 +1,47 @@
+
+body{
+	margin-top:30px;
+	margin-left:20px;
+}
+ul{
+	list-style:none;
+}
+td{
+	padding-right:8px;
+}
+tr:nth-child(even){
+	background-color:lightgrey;
+}
+
+table{
+	border: 1px solid grey;
+	margin-bottom: 8px;
+}
+
+table.newsensor{
+	border: none;
+}
+
+h2{
+	font-weight:bolder;
+}
+
+tr.newsensor{
+	background-color:white;
+}
+button{
+	margin:4px;
+	padding:4px;
+}
+
+pre{
+  font-family: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
+  margin-bottom: 10px;
+  overflow: auto;
+  width: auto;
+  padding: 5px;
+  background-color: #eee;
+  width: 650px!ie7;
+  padding-bottom: 20px!ie7;
+  max-height: 600px;
+}

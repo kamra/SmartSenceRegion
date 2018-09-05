@@ -1,0 +1,130 @@
+<link rel="import" href="../../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+
+
+<dom-module id="layer-control">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            .main {
+                width: 100%;
+                height: 100%;
+            }
+            paper-checkbox{
+                padding:2px;
+            }
+        </style>
+
+        <div class="main layout vertical">
+            <template is="dom-repeat" items="{{layers}}">
+                <paper-checkbox id="[[item]]" on-change="_layerControl">[[item]]</paper-checkbox>
+            </template>
+        </div>
+
+        <iron-ajax id="layerRequest"
+                   url="./map/layers"
+                   handle-as="json"
+                   on-response="layerResponse"></iron-ajax>
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class LayerControl extends Polymer.Element {
+
+            static get is() { return 'layer-control'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    layers: {
+                        type: Array,
+                        value: []
+                    },
+                    map: {
+                        type: Object,
+                        value: null
+                    },
+                    layersToMap: {
+                        type: Array,
+                        value: []
+                    }
+
+                }
+            }
+            connectedCallback() {
+                Polymer.Async.microTask.run(() => {
+                    this._initLayers();
+                });
+            }
+
+            _initLayers() {
+                this.$.layerRequest.generateRequest()
+            }
+
+            layerResponse(ev) {
+
+                this.layers = ev.detail.response.filter(e => e.substring(0,4) != 'data')
+
+                this.layers.forEach((e) => {
+                    let wms_source = new ol.source.ImageWMS({
+                        // Replace to yours, could be fetched from server
+                        url: 'http://smartregion.sokigo.com/cgi-bin/mapserv.exe?map=MY_MAPFILE',
+                        params: { 'layers': e, 'version': '1.3.0' },
+                        serverType: 'mapserver'
+                    })
+
+                    let wms_layer = new ol.layer.Image({
+                        source: wms_source
+
+                    })
+                    wms_layer.name = e
+
+                    this.layersToMap.push(wms_layer)
+                })
+
+ 
+            }
+
+            _layerControl(ev) {
+                let layers = this.map.getLayers()
+
+                let hit = 0;
+                layers.a.forEach((e) => {
+                   
+                    if (e.name === ev.target.id) {
+                        
+                        let layer = e
+                        this.map.removeLayer(e)
+                        hit++;
+                        
+                    }
+                    
+                })
+
+                // Quick and insanely dirty
+                if (hit === 0) {
+                   
+                    this.map.addLayer(this.layersToMap[this.layers.indexOf(ev.target.id)])
+                   
+                }
+                
+                
+            }
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('layer-control', LayerControl);
+    </script>
+
+</dom-module>

@@ -1,0 +1,257 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
+<link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../mapWindow/map-window.html">
+<link rel="import" href="../admin_v2-sensorlist/admin_v2-sensorlist.html">
+<link rel="import" href="../loginPopup/login-popup.html">
+<link rel="import" href="../socketConnection/socketConnection.html"/>
+<link rel="import" href="../addSensorArea/add-sensor.html" />
+<link rel="import" href="../changeSensorSettings/sensor-settings.html" />
+
+<dom-module id="admin_v2-app">
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+
+            :host {
+                display: block;
+            }
+
+            html body {
+                font-family: 'Roboto', 'Noto', sans-serif;
+                -webkit-font-smoothing: antialiased;
+                background: #f1f1f1;
+                
+            }
+
+            paper-button {
+                color: white;
+            }
+
+            .panel {
+                max-width: 25%;
+                border-right: 2px solid #3eb1c8;
+                
+            }
+
+            .main {
+                background-size:cover;
+                height:100vh;
+            }
+
+            app-header {
+                background-color: #3eb1c8;
+                font-family: 'Roboto', 'Noto', sans-serif;
+                -webkit-font-smoothing: antialiased;
+                color: white;
+            }
+
+
+            #loginButton.login[active] {
+                background-color: var(--paper-red-300);
+            }
+
+            paper-button.disDefault {
+                background-color: #3eb1c8;
+            }
+
+
+            .title {
+                padding-top: 15px;
+            }
+
+        </style>
+
+        <div class="main layout horizontal">
+            <admin_v2-sensorlist id="sensorList" class="panel layout flex-start" 
+                                 on-checkedentity="_drawSensorOnMap"
+                                 on-changesensorsettings="_changeSensorSettings">abc</admin_v2-sensorlist>
+
+
+
+            <div class="innercontainer layout vertical flex self-stretch">
+
+                <app-header class="">
+                    <app-toolbar class="layout horizontal end-justified">
+                      
+                        
+                        <paper-button hidden$="{{!authenticated}}" class="disDefault" id="addSensorButton" on-tap="addSensor">add sensor</paper-button>
+                        <!--<paper-button hidden$="{{!authenticated}}" class="disDefault" id="addRemoteSensorButton" on-tap="addRemoteSensor">add remote sensor</paper-button>-->
+                        <paper-button id="loginButton" class="login" on-tap="_loginAttempt">Login</paper-button>
+
+                        <!--<paper-button class="register" on-tap="_registerRequest">register</paper-button>-->
+                    </app-toolbar>
+                </app-header>
+
+                <iron-pages id="contentSwitch" selected="0" class="container layout flex">
+                    <map-window id="mapwindow">karta!</map-window>
+                    <add-sensor id="addSensorArea"></add-sensor>
+                    <sensor-settings id="changeSensorSettings"></sensor-settings>
+                </iron-pages>
+
+            </div>
+           
+            <register-popup id="registerPopup" on-registerevent="_successfullRegister"></register-popup>
+          
+            <socket-connection id="socketBroker" on-sensorupdate="_updateSensorValueOnMap" on-login="_successFullLogin" on-listrefresh="updateSensorList"></socket-connection>
+
+            <iron-form allow-redirect="true" id="loginForm" on-iron-response="testing">
+                <form action="./login" method="post">
+                  
+                </form>
+            </iron-form>
+           
+           <login-popup id="login" on-login-attempt="loginSocketRequest"></login-popup>
+
+
+        </div>
+      
+
+
+
+    </template>
+    <script>
+        /**
+         * @customElement
+         * @polymer
+         */
+        class Admin_v2App extends Polymer.Element {
+            static get is() { return 'admin_v2-app'; }
+            static get properties() {
+                return {
+                    prop1: {
+                        type: String,
+                        value: 'admin_v2-app'
+                    },
+                    user: {
+                        type: String,
+                        value: ''
+                    },
+                    authenticated: {
+                        type: Boolean,
+                        value: false
+                    },
+                    payload: {
+                        type: Object,
+                        value: {
+                            username: "admin@test.com",
+                            password: "1234"
+                        }
+                    }
+                };
+
+            }
+           
+         
+            _loginAttempt() {
+
+                if (this.$.loginButton.textContent === 'Logout') {
+                    this._logoutAttempt();
+                } else {
+                    //this.$.loginForm.submit()
+                    this.$.login.open();
+                    //this.$.loginRequest.generateRequest();
+                    
+                }
+                             
+            }
+            loginResponse(ev) {
+                
+            }
+            updateSensorList() {
+                this.$.sensorList.updateList();
+            }
+            _drawSensorOnMap(e) {
+               console.log(e)
+                e.detail.checked === true ? this.$.mapwindow.addEntityOnMap(e.detail) : 
+                    this.$.mapwindow.removeEntityFromMap(e.detail);
+        
+            }
+            _changeSensorSettings(ev) {
+                this.$.changeSensorSettings.changeView = true;
+                this.$.changeSensorSettings.change(ev)
+                this.$.contentSwitch.selected = 2;
+
+                if (this.$.addSensorButton.textContent === 'Map') {
+
+                    this.$.addSensorButton.textContent = 'Add Sensor'
+                  
+                } else {
+                    this.$.addSensorButton.textContent = 'Map';
+                 
+                }
+
+            }
+            _successFullLogin(e) {
+
+                this.authenticated = true;
+
+                this.user = e.detail.user;
+                this.$.loginButton.active = true;
+                this.$.loginButton.textContent = 'Logout';                              
+                this.$.sensorList.authenticated = true;
+                this.$.sensorList.showMyList(this.user);
+            }
+
+            _logoutAttempt() {
+                this.$.sensorList.authenticated = false;
+                this.authenticated = false;
+                this.$.contentSwitch.selected = 0;
+                var oReq = new XMLHttpRequest();
+
+                oReq.open("POST", "http://localhost:8050/logout");
+                oReq.withCredentials = true;
+                oReq.setRequestHeader("Content-type", "application/json")
+                oReq.send();
+
+          
+                this.$.loginButton.textContent = 'Login'
+                this.user = ''
+                this.$.sensorList.removeMyList();
+               
+                this.$.sensorList.listRefresh();
+
+            }
+            _registerRequest() {
+                this.$.registerPopup.register();
+            }
+            addSensor() {
+                this.$.addSensorArea.changeView = false;
+                if (this.$.addSensorButton.textContent === 'Map') {
+                   
+                    this.$.addSensorButton.textContent = 'Add Sensor'
+                    this.$.contentSwitch.selected = 0;
+                } else {
+                    this.$.addSensorButton.textContent = 'Map';
+                    this.$.contentSwitch.selected = 1;
+                }                               
+            }
+            addRemoteSensor() {
+                this.$.sensorList.addSensor_2();
+            }
+            _updateList() {
+                this.$.sensorList.showMyList(this.user);
+                this.$.sensorList.listRefresh();
+            }
+            _updateSensorValueOnMap(ev) {
+       
+                this.$.mapwindow.updateSensorValueOnMap(ev);
+            }
+           
+          
+        }
+
+        window.customElements.define(Admin_v2App.is, Admin_v2App);
+    </script>
+</dom-module>

@@ -1,0 +1,14 @@
+<wfs:GetFeature
+	xmlns:tows="http://www.tinyows.org/"
+	xmlns:wfs="http://www.opengis.net/wfs"
+	xmlns:ogc="http://www.opengis.net/ogc"
+	xmlns:gml="http://www.opengis.net/gml">
+  <wfs:Query typeName="tows:***">
+    <ogc:Filter>
+      <ogc:PropertyIsEqualTo>
+        <ogc:PropertyName>id</ogc:PropertyName>
+        <ogc:Literal>***</ogc:Literal>
+      </ogc:PropertyIsEqualTo>
+    </ogc:Filter>
+  </wfs:Query>
+</wfs:GetFeature>

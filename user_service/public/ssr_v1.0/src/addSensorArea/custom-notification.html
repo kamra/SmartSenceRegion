@@ -1,0 +1,235 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+
+<link rel="import" href="custom-notification-field.html" >
+
+
+<dom-module id="custom-notification">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            .operators {
+                width: 500px;
+                margin-bottom: 50px;
+            }
+
+            .header {
+                --paper-item-min-height: 20px;
+                height: 20px;
+            }
+            #custom {
+                margin-top: 10px;
+            }
+            .fat {
+                font-weight: bold;
+            }
+            
+        </style>
+
+
+        <div class="layout horizontal">
+           
+            <paper-checkbox class="fat" checked="{{toggle}}" id="custom">Custom Notification</paper-checkbox>
+            <paper-icon-button icon="add" on-tap="_addRule"></paper-icon-button>
+           
+            <paper-item id="errorMsg"></paper-item>
+        </div>
+        
+        <iron-collapse opened="{{toggle}}">
+
+
+            <div class="layout horizontal">
+                <paper-item class="header">Attribute</paper-item>
+                <paper-item class="header">Operator</paper-item>
+                <paper-item class="header">Value</paper-item>
+            </div>
+
+            <div id="rules" on-test="remove">
+
+            </div>
+
+            <div id="updates">
+                <paper-item>Attributes to send in notification</paper-item>
+                <template is="dom-repeat" items="{{attributesInNot}}">
+                    <paper-checkbox id="[[item]]">[[item]]</paper-checkbox>
+                </template>
+            </div>
+
+            <div>
+                <paper-item>Where to send this notification</paper-item>
+                <paper-input id="mail" label="Email adress" required type="email" auto-validate error-message="Enter a valid e-mail adress"></paper-input>
+            </div>
+        </iron-collapse>
+
+        <iron-ajax id="notificationRequest"
+                   handle-as="json"
+                   url="./entity/customnotification"
+                   content-type="application/json"
+                   on-response="customNotificationResponse"
+                   method="post"
+                   body="[[payload]]"></iron-ajax>
+
+
+
+
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class CustomNotification extends Polymer.Element {
+
+            static get is() { return 'custom-notification'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    operators: {
+                        type: Array,
+                        value: ["==", ">", "<", ">=", "<=", "!=", ".."]
+                    },
+                    attributesInNot: {
+                        type: Array,
+                        value: []
+                    },
+                    noSelection: {
+                        type: Boolean,
+                        value: true
+                    },
+                    toggle: {
+                        type: Boolean,
+                        value: false
+                    }
+                
+
+
+                }
+            }
+            _testing() {
+                
+                this.save('testing_newType', 'Humidity');
+            }
+            _addRule() {
+                let rule = document.createElement("custom-notification-field");
+                rule.attris = [];
+                
+                for (let i = 0; i < this.attributesInNot.length; i++) {
+                    rule.attris.push(this.attributesInNot[i]);
+                }
+
+                rule.addEventListener("test", (e) => {
+                    this.remove(e)
+                })
+            
+                
+
+                Polymer.dom(this.$.rules).appendChild(rule);
+
+            }
+            remove(e) {
+                
+                this.$.rules.removeChild(e.path[0]);
+            }
+            updateDropdown(e) {
+               
+
+                if (this.attributesInNot.includes(e.detail)) {
+                    this.splice('attributesInNot', this.attributesInNot.indexOf(e.detail), 1);
+                } else {
+                    this.push('attributesInNot', e.detail);
+                }
+
+                
+               
+                let children = this.$.rules.children;
+                
+                for (let i = 0; i < children.length; i++) {
+                    children[i].updateAttris(e.detail);
+                    
+                }
+
+
+            }
+            save(id, type) {
+                
+
+                if (!this.$.mail.validate() || this._getSelectedOnes().length === 0) {
+                    
+                    return false;
+                }
+
+                
+                let children = this.$.rules.children;
+                let rule = [];
+                let atts = [];
+                for (let i = 0; i < children.length; i++) {
+
+                    if (!children[i].getRule()) {
+                     
+                        return false;
+                    } else {
+                        rule.push(children[i].getRule());
+                        atts.push(children[i].getAtt());
+                    }
+                    
+                    
+                }
+
+                if (atts.length === 0) {
+                    atts = this.attributesInNot;
+                }
+
+                let obj = {
+                    id: id,
+                    type: type,
+                    email: this.$.mail.value,
+                    attributesInNotification: this._getSelectedOnes(),
+                    rules: rule,
+                    attributesToMonitor: atts
+                }
+
+                
+                this.payload = obj;
+                console.log(obj)
+                this.$.notificationRequest.generateRequest();
+
+                return true;
+                
+               
+            }
+            _getSelectedOnes() {
+                let children = this.$.updates.children;
+                let arr = [];
+                for (let i = 0; i < children.length; i++) {
+                    if (children[i].checked) {
+                        arr.push(children[i].id.toLowerCase())
+                    }
+                }
+
+                return arr;
+            }
+            customNotificationResponse(ev) {
+                console.log(ev)
+            }
+           
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('custom-notification', CustomNotification);
+    </script>
+
+</dom-module>

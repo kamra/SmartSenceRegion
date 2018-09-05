@@ -1,0 +1,79 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../addSensorArea/add-sensor.html">
+
+
+<dom-module id="sensor-settings">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+          
+        </style>
+        
+        <add-sensor id="changeSensorSettings"></add-sensor>
+        <iron-ajax
+                   id="sensorReq"
+                   json="true",
+                   url="./entity/entity"
+                   params="{{sensor}}"
+                   on-response="_sensorResponse"
+                   ></iron-ajax>
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class SensorSettings extends Polymer.Element {
+
+            static get is() { return 'sensor-settings'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+                    entities: {
+                        type: Array,
+                        value: []
+                    },
+                    sensor: {
+                        type: Object,
+                        value: null,
+                        notify: true
+                    }
+
+                }
+            }
+            change(ev) {
+
+                // Reuse add sensor area, when prefilled data exists call the method "change"
+                // Then prefill everything and teeat the elemnet as regular. When saving
+                // the change attr is true and the event is fired back here for handling
+                this.sensor = {sensor: ev.detail.srcElement.id }
+                this.$.sensorReq.generateRequest()
+
+             
+            }
+            _sensorResponse(ev) {
+         
+                this.$.changeSensorSettings.preFilledData(ev.detail.response)
+            }
+         
+
+
+
+
+
+        }
+
+
+        // Register the x-custom element with the browser
+        customElements.define('sensor-settings', SensorSettings);
+    </script>
+
+</dom-module>

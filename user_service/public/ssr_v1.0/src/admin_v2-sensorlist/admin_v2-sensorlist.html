@@ -1,0 +1,738 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+
+<link rel="import" href="sensor-info.html">
+<link rel="import" href="sensor-requests.html">
+
+
+
+<dom-module id="admin_v2-sensorlist">
+
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            :host {
+                display: block;
+                font-family: 'Roboto', 'Noto', sans-serif;
+                -webkit-font-smoothing: antialiased;
+                color: white;
+            }
+
+            .listitem {
+                width: 100%;
+                padding-left: 2px;
+            }
+
+            .bottommenu, .topmenu {
+                background-color: #3eb1c8;
+                color: white;
+                padding-left: 4px;
+                padding-right: 4px;
+            }
+
+            .bottommenu {
+                margin-top: 4px;
+            }
+
+            .topmenu {
+                margin-top: 4px;
+                margin-bottom: 8px;
+                height: 150px;
+                background-color: white;
+                border-bottom: 1px solid grey;
+            }
+
+            #listcontainer {
+                height: 100%;
+            }
+
+            .sensorlist {
+                /*min-width: 320px;*/
+                max-width: 500px;
+                width: 100%;
+                height: 100%;
+         
+            }
+
+            .searchField {
+                width: 45%;
+                margin-right: 4px;
+                color: white;
+            }
+
+            .typeSelector {
+                width: 45%;
+            }
+
+            .mainContent {
+               
+                height: 100%;
+                padding-bottom: 18px;
+            }
+
+            h3 {
+                margin-top: 0px;
+                margin-bottom: 4px;
+                padding: 8px;
+            }
+
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+            }
+
+            .dlgContent {
+                padding: 8px;
+            }
+
+            --paper-input-container-input: {
+                color: var(--paper-indigo-500);
+                font-style: normal;
+                font-family: serif;
+                text-transform: uppercase;
+            }
+
+            paper-dialog#newSensorDlg {
+                max-width: 350px;
+            }
+
+            #contentScroll {
+                height: 95%;
+                margin-top: 45px;
+            }
+
+            .listcontainer {
+                width: 100%;
+            }
+
+            .typeCheckBoxes {
+                padding: 5px;
+            }
+
+            .whiteIcon {
+                color: black;
+            }
+
+            .tab {
+                background-color: var(--paper-grey-200);
+                color: black;
+            }
+
+                .tab[active] {
+                    background-color: #3eb1c8;
+                }
+
+            .listButtonCont {
+                margin-top: 5px;
+                width: 100%;
+                position: fixed;
+                margin-left: 24px;
+            }
+
+            .sensorFilter {
+                padding-left: 8px;
+                padding-right: 4px;
+            }
+
+            #selectAll {
+                margin-left: 2px;
+                margin-right: 7px;
+                margin-top: 12px;
+            }
+
+            .elli {
+                width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+                .elli:hover {
+                    overflow: visible;
+                }
+
+            .subtitle {
+                font-size: 0.6em;
+                display: block;
+                
+            }
+            span.title{
+                font-weight: bold;
+            }
+            
+        </style>
+
+        <div id="listcontainer" class="layout vertical">
+            <div class="sensorlist layout vertical">
+                <div class="topmenu horizontal center-justified layout">
+
+                    <iron-image src="../../img/logo_SSR.png" style="width:200px; height:100px;" sizing="contain"></iron-image>
+                    <iron-image src="../../img/euflag.png" style="width:200px; height:100px;" sizing="contain"></iron-image>
+
+                </div>
+                <div class="sensorFilter layout horizontal center">
+                    <paper-input class="searchField" label="Search" always-float-label="" value="{{searchTerm}}"></paper-input>
+                    <div class="flex"></div>
+                    <paper-dropdown-menu no-animations class="typeSelector" label="Sensor Type" always-float-label="" value="{{selectedType}}">
+                        <paper-listbox slot="dropdown-content" class="dropdown-content">
+                            <paper-item id="test">All types</paper-item>
+                            <paper-item >Private</paper-item>
+                            <template is="dom-repeat" items="{{allTypes}}">
+                                <paper-item id="{{item.type}}">{{item.type}}</paper-item>
+                            </template>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+                </div>
+
+                <div class="mainContent">
+                    <div class="listButtonCont layout horizontal">
+                        <paper-checkbox id="selectAll" on-checked-changed="_selectAllSensorsInFilteredList"></paper-checkbox>
+
+                        <paper-icon-button icon="icons:refresh" on-tap="updateList" style="color:black;"></paper-icon-button>
+                     
+                    </div>
+
+                    <paper-dialog-scrollable id="contentScroll">
+                  
+                        <div id="publicSensors">
+                            <template is="dom-repeat" items="{{entities}}">
+                                <div class="horizontal layout listitem center">
+                                    <paper-checkbox class="checkSensorItem flex" id="{{item.id}}" checked="{{item.selected}}" on-checked-changed="_addToActive">
+                                        <span class="elli">{{item.id}}</span>
+                                        <div class="layout horizontal elli">
+                                            <span class="subtitle title">Last Modified: &nbsp; </span>
+                                            <span class="subtitle">{{item.dateModified.value}}</span>
+                                        </div>
+                                       
+                                    </paper-checkbox>
+                                    
+                                    <paper-icon-button hidden$="{{!authenticated}}" class="whiteIcon" icon="icons:settings" on-tap="_showChangeSettings" id="{{item.id}}">
+                                    </paper-icon-button>
+                                    <paper-icon-button class="whiteIcon" icon="icons:info-outline" on-tap="showInfo" id="{{item.id}}">
+                                    </paper-icon-button>
+                                    
+                                </div>
+                                <hr >
+                            </template>
+                        </div>
+                        <div id="mySensors" hidden>
+                            <template is="dom-repeat" items="{{myEntities}}">
+                                <div class="horizontal layout listitem center">
+                                    <paper-checkbox class="checkSensorItem flex" id="{{item.id}}" checked="{{item.selected}}" on-checked-changed="_addToActive">
+                                        <paper-item>{{item.id}}</paper-item>
+                                    </paper-checkbox>
+
+                                    <paper-icon-button class="whiteIcon" icon="icons:info-outline" on-tap="showInfo" id="{{item.id}}">
+                                    </paper-icon-button>
+                                    <paper-icon-button class="whiteIcon" icon="icons:settings-input-antenna" on-tap="setupSensor" id="{{item.id}}">
+                                    </paper-icon-button>
+                                </div>
+
+                            </template>
+                        </div>
+                    </paper-dialog-scrollable>
+                </div>
+                <div class="bottommenu layout-end">
+                    <paper-icon-button hidden$="{{!authenticated}}" icon="icons:delete-forever" on-tap="deleteConfirm"></paper-icon-button>
+
+                </div>
+
+                <paper-dialog id="dlgConfirmDelete">
+                    <div class="dlgHeader layout horizontal center">
+                        <h3 class="flex">Delete Sensor</h3>
+                        <iron-icon icon="icons:warning" on-tap="closeInfo"></iron-icon>
+                    </div>
+                    <div class="dlgContent">
+                        <div>
+                            Selected sensors will be removed from the FiWare.
+                        </div>
+                        <div class="layout horizontal">
+                            <paper-button class="flex" dialog-dismiss="">Cancel</paper-button>
+                            <paper-button class="flex end-justified" dialog-dismiss="" on-tap="deleteSensor">Delete</paper-button>
+                        </div>
+                    </div>
+                </paper-dialog>
+
+                <sensor-info id="sensorInfo" entities="{{allEntities}}"></sensor-info>
+                <sensor-requests id="sensorRequest" entities="{{allEntities}}"></sensor-requests>
+
+
+                <add-Sensor-Window id="addSensorWindow"></add-Sensor-Window>
+            </div>
+
+        </div>
+        <!-- Make this reusable later, now everything works -->
+        <iron-ajax id="myEntitiesRequest"
+                   url="./myEntities"
+                   handle-as="json"
+                   on-response="_populateMyList"></iron-ajax>
+
+        <iron-ajax id="publicEntitiesRequest"
+                   url="./entity/entities"
+                   handle-as="json"
+                   on-response="listRefresh"></iron-ajax>
+
+
+        <iron-ajax id="deleteRequest"
+                   url="./entity/deleteentity"
+                   handle-as="json"
+                   method="post"
+                   body="[[payload]]"
+                   content-type="application/json"
+                   on-response="_deletedResponse"></iron-ajax>
+    </template>
+
+    <script src="./fiware-manager.js"></script>
+    <script>
+        /**
+         * @customElement
+         * @polymer
+         */
+
+        class Admin_v2sensorlist extends Polymer.Element {
+
+            static get is() { return 'admin_v2-sensorlist'; }
+            static get properties() {
+                return {
+                    prop1: {
+                        type: String,
+                        value: 'admin_v2-sensorlist'
+                    },
+                    entities: {
+                        type: Array,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: []
+                    },
+                    entities: {
+                        type: Object,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: null
+                    },
+                    myEntities: {
+                        type: Array,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: []
+                    },
+                    allEntities: {
+                        type: Array,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: []
+                    },
+
+                    searchTerm: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "",
+                        observer: '_searchTermChanged'
+                    },
+                    allTypes: {
+                        type: Array,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: ["test"]
+                    },
+                    selectedType: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "All types",
+                        observer: '_selectedTypeChanged'
+                    },
+                    newSensorName: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "",
+                    },
+                    newSensorType: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "",
+                    },
+                    propertyName: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "",
+                    },
+                    selectedPropertyType: {
+                        type: String,
+                        notify: true,
+                        reflectToAttribute: true,
+                        value: "text",
+                    },
+                    availableTypes: {
+                        type: Object,
+                        value: []
+                    },
+                    loggedIn: {
+                        type: Boolean,
+                        value: false
+                    },
+                    currentList: {
+                        type: String,
+                        value: 'public'
+                    },
+                    activeEntities: {
+                        type: Array,
+                        value: []
+                    },
+                    selected: {
+                        type: Object,
+                        value: null,
+                        notify: true
+                    },
+                    authenticated: {
+                        type: Boolean,
+                        value: false
+                    }
+
+                };
+
+            }
+
+            constructor() {
+             
+                super();
+
+            }
+            ready() {
+                super.ready();
+                //this.$.publicEntitiesRequest.generateRequest();
+
+                this.addEventListener('listrefresh', () => {
+                  
+                })
+                //this.listRefresh();
+            }
+            updateList() {
+                this.$.publicEntitiesRequest.generateRequest();
+            }
+            _addToActive(e) {
+                
+                let ent = []
+                this.currentList === 'public' ? ent = this.allEntities : ent = this.myEntities;
+                if (e.detail.value === true) {
+
+                    ent.forEach(el => {
+                        if (el.id === e.target.id) {
+
+                            if (this.activeEntities.length === 0) {
+                                this.activeEntities.push(el)
+                                this._fireCheckedEntityEvent(el, e.detail.value);
+                            } else {
+
+                                let hit = 0;
+                                for (let i = 0; i < this.activeEntities.length; i++) {                                   
+                                    if (this.activeEntities[i].id === e.target.id) {
+                                       
+                                        hit++;
+                                        break;
+                                    }                                    
+                                }
+                                if (hit === 1) {
+                                    return;
+                                } else {
+                                    this.activeEntities.push(el)
+                                    this._fireCheckedEntityEvent(el, e.detail.value);
+                                }
+                            }
+                              
+                        }
+                    })
+                } else {
+            
+                    ent.forEach(el => {
+                        
+                        if (el.id === e.target.id) {
+                            let index = 0;
+                            for (let i = 0; i < this.activeEntities.length; i++) {
+                                if (this.activeEntities[i].id === e.target.id) {
+                                    index = i;
+                                }
+                            }
+                      
+                            if (index === -1) {
+
+                            } else {
+                        
+                                this.activeEntities.splice(index, 1)
+                            }
+
+                            this._fireCheckedEntityEvent(el, e.detail.value);
+                        }
+                    })
+                }
+            }
+
+
+            // Fires every time a entity is checked or unchecked to be redrawn on the map
+            _fireCheckedEntityEvent(el, val) {
+
+                this.dispatchEvent(new CustomEvent('checkedentity',
+                    {
+                        detail: {
+                            entity: el,
+                            entities: this.activeEntities,
+                            checked: val
+                        }
+                    }
+                ))
+            }
+            listRefresh(e) {
+
+                this.entities = [];
+                this.allEntities = [];
+           
+                e.detail.response.forEach(e => {
+                    this.allEntities.push(e)
+                    this.entities.push(e)
+                    
+                })
+                
+               
+                manageFiware.getTypes().then(t => {
+
+                    this.set("allTypes", []);
+                    this.set("allTypes", t);
+
+                    this.selectedType = "All types";
+                    this.searchTerm = "";
+                    this.filterList(this.searchTerm, this.selectedType);
+                    this._checkActiveEntities();
+                    
+                })
+
+
+            }
+            _checkActiveEntities() {
+
+                if (this.activeEntities.length === 0) {
+                    return;
+                }
+              
+                let children = this.$.publicSensors.children;
+
+                for (let i = 0; i < children.length; i++) {
+                   
+                    for (let j = 0; j < this.activeEntities.length; j++) {
+                      
+                        if (children[i].firstElementChild == null) {
+
+                        } else {
+                            
+                            if (this.activeEntities[j].id === children[i].firstElementChild.id) {
+                             
+                                children[i].firstElementChild.checked = true;
+
+                            }
+                        }
+                        
+                        
+                       
+                    }
+
+                }
+            }
+
+
+
+            showInfo(event) {
+               
+                this.$.sensorInfo.showInfo(event)
+
+            }
+
+            showSensorRequests(event) {
+                this.$.sensorRequest.setUpSensor(event)
+            }
+
+            deleteConfirm() {
+                var dlgElem = this.$.dlgConfirmDelete;
+                dlgElem.open();
+            }
+
+            deleteSensor(event) {
+                var tmp1 = Polymer.dom(this.root);
+                var selected = [];
+                this.entities.map(e => {
+
+                    if (e.selected) {
+                        selected.push(e);
+                    }
+                });
+                
+                this._addToActive({
+                    detail: {
+                        value: false
+                    },
+                    target: {
+                        id: selected[0].id
+                    }
+                })
+                this.payload = selected
+                this.$.deleteRequest.generateRequest();
+
+            }
+            _deletedResponse(ev) {
+               // Show popup?
+            }
+
+            _searchTermChanged() {
+                this.filterList(this.searchTerm, this.selectedType);
+            }
+
+            _selectedTypeChanged() {
+
+                this.filterList(this.searchTerm, this.selectedType);
+            }
+
+            filterList(searchTerm, type) {
+
+                this.entities = this.allEntities;
+
+                if (type.length > 0 && type != "All types") {
+                    
+                    this.entities = this.entities.filter(e => (e.type) == type || (e.visibility.value) == type);
+                }
+                if (searchTerm.length > 0) {
+                    this.entities = this.entities.filter(e => (e.id).toLowerCase().indexOf((searchTerm).toLowerCase()) >= 0);
+                }
+                
+               
+                var tmp = this.entities;
+                this.set("entities", []);
+                this.set("entities", tmp);
+
+
+            }
+            _selectAllSensorsInFilteredList(ev) {
+
+                let value = ev.detail.value;
+                let children = this.$.publicSensors.children;
+
+                
+                let entities = this.entities != null ? this.entities : ["null"]
+
+                for (let i = 0; i < children.length; i++) {
+                    for (let j = 0; j < entities.length; j++) {
+                      
+                        if (children[i].firstElementChild == null) {
+
+                        } else {
+
+                            if (entities[j].id === children[i].firstElementChild.id) {
+                                
+                                children[i].firstElementChild.checked = value;
+
+                            }
+                        }
+                    }
+                }
+
+            }
+            _showPublicList() {
+
+                console.log("show public")
+                let children = this.$.mySensors.children;
+
+                for (let i = 0; i < children.length; i++) {
+                    if (children[i].firstElementChild == null) {
+
+                    } else {
+
+                        if (children[i].firstElementChild.checked === true) {
+                            children[i].firstElementChild.checked = false;
+                        }
+                    }
+                }
+                this.$.publicSensors.hidden = false;
+                this.$.mySensors.hidden = true;
+                this.currentList = 'public'
+            }
+            _showPrivateList() {
+
+                console.log("show private")
+                let children = this.$.publicSensors.children;
+
+                for (let i = 0; i < children.length; i++) {
+                    if (children[i].firstElementChild == null) {
+
+                    } else {
+
+                        if (children[i].firstElementChild.checked === true) {
+                            children[i].firstElementChild.checked = false;
+                        }
+                    }
+
+                }
+               
+                this.$.mySensors.hidden = false;
+                this.$.publicSensors.hidden = true;
+                this.currentList = 'private'
+
+            }
+
+            showMyList(user) {
+                
+                this.loggedIn = true;
+                this.$.publicEntitiesRequest.generateRequest();
+               
+            }
+            _getMyEntities(user) {
+
+
+                this.$.myEntitiesRequest.body = user;
+
+                this.$.myEntitiesRequest.generateRequest();
+
+            }
+            _populateMyList(e) {
+
+                this.myEntities = e.detail.response;
+
+            }
+
+            removeMyList() {
+                this.loggedIn = false;
+                this.$.myListButton.hidden = true;
+                this.$.myListButton.active = false;
+                this.myEntities = [];
+                this._showPublicList();
+            }
+            _showChangeSettings(event) {            
+                this.dispatchEvent(new CustomEvent('changesensorsettings', { detail: event }))
+
+            }
+        }
+
+        window.customElements.define(Admin_v2sensorlist.is, Admin_v2sensorlist);
+
+
+    </script>
+</dom-module>

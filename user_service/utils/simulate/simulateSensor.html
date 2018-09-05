@@ -1,0 +1,41 @@
+﻿
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+	<meta charset="UTF-8">
+	<title>FiWare - simulate sensor</title>
+	<link rel="stylesheet" href="fiwarestyle.css">
+	<meta name="viewport" content="user-scalable=no, width=device-width" />
+	<link rel="stylesheet" href="https://openlayers.org/en/v4.0.1/css/ol.css" type="text/css">
+	<script src="https://openlayers.org/en/v4.0.1/build/ol.js" type="text/javascript"></script>
+
+</head>
+<body>
+	<h2>Simulera automatiska sensoruppdateringar</h2>
+	<button onClick="backToIndex()" name="backButton">Tillbaka</button>
+	<h3>Simulera en sensor:</h3>
+	<div id="entitiesSelectDiv">
+		<select name="test" id="entitiesSelect">
+			<option value="1">ett</option>
+			<option value="2">två</option>
+			<option value="3">tre</option>
+		</select>
+	</div>
+	<button onClick="startSimulate()" >Starta</button>
+	<button onClick="stopSimulate()" >Stoppa</button>
+	<div>
+	<h3>Simulera alla</h3>
+	<button onClick="startSimulateAll()" >Starta</button>
+	<button onClick="stopSimulateAll()" >Stoppa</button>
+	</div>
+	<div id="entityDetailsDiv">
+	
+	</div>
+	<p hidden="hideDetails">Klicka i kartan för att uppdatera sensorns position</p>
+	<div id="map" style="height:250px;width:250px;"></div>
+	<button onClick="updateValues()" name="useEntity" id="useEntity" hidden="hideDetails">Uppdatera</button>
+	<script type="text/javascript" src="common.js"></script>
+	<script type="text/javascript" src="simulateSensor.js"></script>
+	<div id="newSubscription"></div>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="login-popup">
+    <!-- Optional shadow DOM template -->
+    <template>
+        <style include="iron-flex iron-flex-alignment"></style>
+        <style>
+            /* CSS rules for your element */
+            #loginPopup{
+                max-width: 250px;
+                width: 250px;
+                height: 360px;
+                
+            }
+            .dlgHeader {
+                margin-top: 0px;
+                padding-right: 8px;
+                padding-left: 8px;
+                background-color: #3eb1c8;
+                color: white;
+                height: 30px;
+                font-family: 'Roboto', 'Noto', sans-serif;
+                -webkit-font-smoothing: antialiased;
+                margin-top: 0px;
+                margin-bottom: 4px;
+                padding: 8px;
+            }
+
+            paper-button {
+                height: 50px;
+                color: white;
+                background-color: #3eb1c8;
+            }
+            .error{
+                color: red;
+            }
+            .buttons{
+                margin-top: 15px;
+            }
+        </style>
+
+        <!-- shadow DOM for your element -->
+
+        <paper-dialog id="loginPopup" class="layout vertical">
+            <div class="dlgHeader layout horizontal center"><paper-item>Login</paper-item></div>
+
+            <iron-form on-iron-form-response="responseHandler" allow-redirect="true" id="loginForm" on-iron-response="testing">
+
+                <form action="./login" method="post">
+                    <div class="layout vertical">
+                        <paper-item id="errorText" class="error"></paper-item>
+                        <paper-input id="username" type="text" required label="E-mail" name="name" error-message="Required"></paper-input>
+                        <paper-input id="password" type="password" name="password" required label="Password" error-message="Required"></paper-input>
+                        <div class="buttons layout horizontal">
+                            <paper-button raised on-tap="_loginRequest">Submit</paper-button>
+                            <paper-button raised on-tap="_cancelLogin">Cancel</paper-button>
+                        </div>
+
+                    </div>
+                </form>
+            </iron-form>
+        </paper-dialog>
+
+        <iron-ajax id="loginRequest"
+                   url="./login"
+                   method="post"
+                   handle-as="json"
+                   body="[[payload]]"
+                   content-type="application/json"
+                   on-response="loginResponse"
+                   on-error="loginErrorResponse"></iron-ajax>
+
+    </template>
+
+    <script>
+        // Define the element's API using an ES2015 class
+        class LoginPopup extends Polymer.Element {
+
+            static get is() { return 'login-popup'; }
+
+            // Declare properties for the element's public API
+            static get properties() {
+                return {
+          
+                }
+            }
+            constructor() {
+                super();
+            }
+            open() {
+                this.$.errorText.textContent = "";
+                this.$.username.value = "";
+                this.$.password.value = "";
+                this.$.loginPopup.open();
+            }
+            _loginRequest() {
+             
+                if (this.$.loginForm.validate()) {
+                    this.payload = { username: this.$.username.value, password: this.$.password.value };
+                    this.$.loginRequest.generateRequest();
+                }
+  
+            }
+            _cancelLogin() {
+                this.$.loginPopup.close();
+                this.$.errorText.textContent = "";
+                this.$.username.value = "";
+                this.$.password.value = "";
+
+            }
+            loginResponse(e) {
+                
+                location.reload();
+                
+
+            }
+            loginErrorResponse(e) {
+               
+               
+                this.$.errorText.textContent = "Username and/or password not found on server" 
+            }
+           
+
+        }
+
+        // Register the x-custom element with the browser
+        customElements.define('login-popup', LoginPopup);
+    </script>
+
+</dom-module>
